@@ -1,4 +1,4 @@
-	25
+	31
 	1	(	Z		1	PUSH
 	1	N	Z		1	PUSH
 	1	-	Z		1   PUSH
@@ -24,4 +24,9 @@
 	1	N	(		1	PUSH
 	1	-	(		1 	PUSH
 	1	)	N		2	PUSH
- 
+	2   E	)		2   POP
+	2   E	+		2   POP
+	2   E	-		2   POP
+	2   E	*		2   POP
+	2   E	/		2   POP
+	2   E	(		1   POP

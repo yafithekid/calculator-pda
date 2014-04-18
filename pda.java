@@ -6,8 +6,10 @@ import java.math.*;
 
 class Util{
 	public static String transitionFile = "transition.txt";
-	/*
+	public static String grammarFile = "grammar.txt";
+	
 	//versi 1 : dengan double
+	/*
 	public static InputSymbol calculate(InputSymbol _a,InputSymbol _op,InputSymbol _c){
 		double a = Double.parseDouble(_a.value);
 		char op = _op.type();
@@ -28,6 +30,7 @@ class Util{
 		return ret;
 	}*/
 	//versi 2 : dengan bigdecimal
+	
 	public static InputSymbol calculate(InputSymbol _a,InputSymbol _op,InputSymbol _c){
 		BigDecimal a = new BigDecimal(_a.value);
 		char op = _op.type();
@@ -39,10 +42,9 @@ class Util{
 		} else if (op == '-'){
 			ret.value = (a.subtract(c)).toString();
 		} else if (op == '*'){
-			System.out.println(a + " " + c);
 			ret.value = (a.multiply(c)).toString();
 		} else { // '/
-			ret.value = (a.divide(c)).toString();
+			ret.value = (a.divide(c,10,RoundingMode.HALF_UP)).toString();
 		}
 		return ret;
 	}
@@ -75,7 +77,9 @@ class InputSymbol{
 			return value.charAt(0);
 		} else if (value.equals("N")){
 			return 'N';
-		} else {
+		} else if (value.equals("E")){
+			return 'E';
+		} else{
 			//check if it is a number
 			for(int i = 0; i < (int) value.length(); ++i){
 				if (value.charAt(i) < '0' || value.charAt(i) > '9'){
@@ -135,6 +139,33 @@ class PDA {
 	public boolean illegalFlag;
 	public void readState(int N){
 	}
+	private char charState(int i){
+		if (i == 1) return 'p';
+		if (i == 2) return 'q';
+		return 'r';
+	}
+	public void printGrammar(int nState){
+		try {
+			PrintWriter wp = new PrintWriter(new File(Util.grammarFile));
+			for(Transition t:transitions){
+				if (t.nextMove.equals("PUSH")){
+					for(int i = 1; i <= nState; ++i){
+						for(int k = 1; k <= nState;++k){
+							wp.printf("[%c%c%c] -> %c",charState(t.currentState),t.topStack.type(),charState(i),t.input.type());
+							wp.printf("[%c%c%c]",charState(t.currentState),t.input.type(),charState(k));
+							wp.printf("[%c%c%c]\n",charState(k),t.topStack.type(),charState(i));
+						}
+					}
+				} else if (t.nextMove.equals("POP")){
+					wp.printf("[%c%c%c] -> %c\n",charState(t.currentState),t.topStack.type(),charState(t.nextState),t.input.type());
+				}
+			}
+			wp.close();
+		} catch (Exception e){
+			System.out.println(e);
+		}
+		
+	}
 	public PDA(){
 		transitions = new Vector<Transition>();
 		stack = new Stack<InputSymbol>();
@@ -158,11 +189,6 @@ class PDA {
 				t.nextMove = sc.next();
 				transitions.add(t);
 			}
-			System.out.println(n); 
-			for(Transition p: transitions){ 
-				System.out.println(p.input.type());
-			}
-
 		} catch(FileNotFoundException f){
 			System.out.println("file transition.txt not found!");
 		} catch(Exception e){
@@ -347,7 +373,6 @@ class Main{
 		for(int i = 0; i < nInputs; ++i){
 			String tmp = "" + s.charAt(i);
 			inputs[i] = new InputSymbol(); inputs[i].create(tmp);
-			System.out.println(inputs[i].type());
 		}
 	}
 
@@ -374,12 +399,12 @@ class Main{
 			} catch (ArithmeticException e){
 				System.out.println("ERROR : Division by zero"); return;
 			} catch (Exception e){
-				System.out.println(e);
-				System.out.println("ERROR : Unknown error"); return;
+				System.out.println("ERROR : Unbalanced parentheses"); return;
 			}
 		}
 		System.out.println("("+expression+")");
 		System.out.println(" = " +calc.getResult());
+		calc.printGrammar(2);
 		
 	}
 }
